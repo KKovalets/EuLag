@@ -1,0 +1,24 @@
+$Inp1D
+H=5000.0 	!Depth, m
+n=4904 		!number of points over the depth
+ni=1000 	!number of points over diameter
+n_data1=96 	!number of experimental measurments (temperature)
+n_data2=96 	!number of experimental measurments (oxygen)
+vartime=1 	!set 1 for time-variable degradation rate. Set 0 for constant
+a=2592000 	!empirical constant alpha (s) to calculate time-variable degradation rate
+b=1. 		!empirical constant beta to calculate time-variable degradation rate
+Cr=3.4722222e-7 !1/s - constant for constant degradation rate
+Q10=2. 		!temperature coefficient, set 1. if degradation rate is temperature-independent
+Cw=2.5463 	!prefactor coefficient for the velocity, m^(1−η)/s
+K_O2=0.000256 	!oxygen dependence parameter kg*m^(−3), set 0. if degradation rate is oxygen-independent
+sigma=2.28 	!dimensionless scaling argument for mass
+eta=1.17 	!dimensionless scaling argument for velocity
+epsilon=4.2 	!power-law exponent for the size distribution
+dstart=0.00002 	!minimum diameter, m
+dend=0.002 	!maximum diameter, m
+Tref=4. 	!reference temperature, C
+Z_measur=96. 	!Sp measurments data to calculate M0*Cm (depth, m)
+Sp_measur=6.74433E-06 !Sp measurments data to calculate M0*Cm (Sp concentration, kg m^(−3))
+Fd_measur=0.	!optionally we can use Fd measurments data to calculate M0*Cm. Then Sp_measur need to be set 0.
+
+$end
