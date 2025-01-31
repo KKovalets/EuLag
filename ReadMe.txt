@@ -25,4 +25,4 @@ Step 3: If you are modeling some specific ocean and you have set new already tem
 In our simulations we used POM concentration measurments. To reproduce them for some specific ocean open the corresponding file from EuLag_Data repository or release with POM concentration profile in this ocean and take the highest measurment from there. Then set the Z_measur as rounded to the nearest integer Z-coordinate and Sp_measur as corresponding POM concentration value.
 In general user can also use POM flux measurments as a parameter instead of concentration. To do this, set the Sp_measur=0. and assign the Z_measur and Fd_measur parameters the corresponding values of the highest measurement from corresponding POM flux file. We didn 't do it in our simulations.
 
-Step 3: Compile an executable file using EuLag.f90 and run it.
+Step 4: Compile an executable file using EuLag.f90 and run it.
