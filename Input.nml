@@ -1,6 +1,6 @@
 $Inp1D
 H=5000.0 	!Depth, m
-n=4904 		!number of points over the depth
+n=4904 		!number of points over the depth (n=(H-Z_measur)/dz)
 ni=1000 	!number of points over diameter
 n_data1=96 	!number of experimental measurments (temperature)
 n_data2=96 	!number of experimental measurments (oxygen)

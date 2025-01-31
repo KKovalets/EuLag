@@ -24,7 +24,7 @@
     real (kind=4):: a, b, Tref, Q10, Cr, Cw, K_O2, sigma, eta, epsilon, M0, gamma0,  M0xCm 
     real(kind=8)::  wp2, dwp2,  H, dz, temp, dd0, Z_measur, Sp_measur, Fd_measur
     real (kind=8), allocatable:: O2_conc(:), T(:), d2Tdt(:), d2O2dt(:), d2wpdt(:), d3wpdt(:), d2gammadt(:), d2ddt(:), T_data(:), O2_data(:)
-    real (kind=8), allocatable:: gamma(:), d(:), Sp(:), Sp_norm(:), Fd_norm(:), wp(:), dwp(:), gamma_interp(:),  wp_interp(:), dwp_interp(:), d_interp(:), integral(:), integral2(:)
+    real (kind=8), allocatable:: gamma(:), d(:), Sp(:), Sp_norm(:), Fd_norm(:), wp(:), dwp(:), gamma_interp(:),  wp_interp(:), dwp_interp(:), d_interp(:), Total_Sp(:), Total_Fd(:)
     real (kind = 8), allocatable:: d0(:), z(:),Zgrid(:), Z_data1(:), Z_data2(:)
     common /cm1/a, b,Cr, Tref, Q10, Cw, K_O2, sigma, eta, n_data1, n_data2, vartime
    
@@ -38,7 +38,7 @@
     
     time = 0.
     
-    allocate(Zgrid(n+1), Sp(n+1), gamma_interp(n+1), wp_interp(n+1), dwp_interp(n+1), d_interp(n+1), integral(n+1), integral2(n+1))
+    allocate(Zgrid(n+1), Sp(n+1), gamma_interp(n+1), wp_interp(n+1), dwp_interp(n+1), d_interp(n+1), Total_Sp(n+1), Total_Fd(n+1))
     allocate( O2_conc(n+1), T(n+1), d2Tdt(n_data1), O2_data(n_data2), d2O2dt(n_data2), d2wpdt(n+1), d2ddt(n+1), d3wpdt(n+1), d2gammadt(n+1), T_data(n_data1))   
     allocate(d(2*n), z(2*n), gamma(2*n),wp(2*n), dwp(2*n), Sp_norm(n+1), Fd_norm(n+1), Z_data1(n_data1), Z_data2(n_data2))
     dz = (H-Z_measur)/n
@@ -85,8 +85,8 @@
     d_interp = 0.
     gamma_interp = 0.
     !Total POM concentration and flux (calculated using numerical integration)
-    integral = 0. !Total POM concentration Sp, kg/m^3
-    integral2 = 0. !Total POM flux Fd, kg/(m^2*s)
+    Total_Sp = 0. !Total POM concentration Sp, kg/m^3
+    Total_Fd = 0. !Total POM flux Fd, kg/(m^2*s)
     open(1, file = "Temperature.dat", status='old', form='formatted', action='read')
 
     do i = 1, n_data1
@@ -111,8 +111,8 @@
         call splint(Z_data2, O2_data, d2O2dt, n_data2, Zgrid(i), O2_conc(i))
     enddo
      
-    integral = 0.
-    integral2 = 0.
+    Total_Sp = 0.
+    Total_Fd = 0.
     
     do j = 1, ni+1, 1
     
@@ -195,15 +195,15 @@
     endif
       
     if (j.eq.1.or.j.eq.ni+1) then
-        integral(1) = integral(1) + Sp(1)
-        integral2(1) = integral2(1) + Cw*d0(j)**(eta+sigma-epsilon)
+        Total_Sp(1) = Total_Sp(1) + Sp(1)
+        Total_Fd(1) = Total_Fd(1) + Cw*d0(j)**(eta+sigma-epsilon)
     else 
         if (mod(j,2).eq.0) then
-            integral(1) = integral(1) + 4*Sp(1)
-            integral2(1) = integral2(1) + 4*Cw*d0(j)**(eta+sigma-epsilon)
+            Total_Sp(1) = Total_Sp(1) + 4*Sp(1)
+            Total_Fd(1) = Total_Fd(1) + 4*Cw*d0(j)**(eta+sigma-epsilon)
         else
-            integral(1) = integral(1) + 2*Sp(1)
-            integral2(1) = integral2(1) + 2*Cw*d0(j)**(eta+sigma-epsilon)
+            Total_Sp(1) = Total_Sp(1) + 2*Sp(1)
+            Total_Fd(1) = Total_Fd(1) + 2*Cw*d0(j)**(eta+sigma-epsilon)
         endif
     endif
       
@@ -224,38 +224,38 @@
             Sp(i+1)= Sp(i)+dz*(k1+2.*k2+2.*k3+k4)/6.
         
             if (j.eq.1.or.j.eq.ni+1) then
-                    integral(i+1) = integral(i+1) + Sp(i+1)
-                    integral2(i+1) = integral2(i+1) + Sp(i+1)* wp(i+1)
+                    Total_Sp(i+1) = Total_Sp(i+1) + Sp(i+1)
+                    Total_Fd(i+1) = Total_Fd(i+1) + Sp(i+1)* wp(i+1)
             else 
                 if (mod(j,2).eq.0) then
-                    integral(i+1) = integral(i+1) + 4*Sp(i+1)
-                    integral2(i+1) = integral2(i+1) + 4*Sp(i+1)* wp(i+1)
+                    Total_Sp(i+1) = Total_Sp(i+1) + 4*Sp(i+1)
+                    Total_Fd(i+1) = Total_Fd(i+1) + 4*Sp(i+1)* wp(i+1)
                 else
-                    integral(i+1) = integral(i+1) + 2*Sp(i+1)
-                    integral2(i+1) = integral2(i+1) + 2*Sp(i+1)* wp(i+1)
+                    Total_Sp(i+1) = Total_Sp(i+1) + 2*Sp(i+1)
+                    Total_Fd(i+1) = Total_Fd(i+1) + 2*Sp(i+1)* wp(i+1)
                 endif 
             endif
         enddo
      enddo
      
     do i = 1, count, 1  
-        integral(i) = integral(i)*dd0/3
-        integral2(i) = integral2(i)*dd0/3
+        Total_Sp(i) = Total_Sp(i)*dd0/3
+        Total_Fd(i) = Total_Fd(i)*dd0/3
     enddo
     if (Sp_measur.ne.0.) then
-        M0xCm = Sp_measur/integral(1)
+        M0xCm = Sp_measur/Total_Sp(1)
     else 
-        M0xCm = Fd_measur/integral2(1)
+        M0xCm = Fd_measur/Total_Fd(1)
     endif
         
     do i = 1, count, 1  
-        integral(i) = integral(i)*M0xCm
-        integral2(i) = integral2(i)*M0xCm
+        Total_Sp(i) = Total_Sp(i)*M0xCm
+        Total_Fd(i) = Total_Fd(i)*M0xCm
     enddo
     
     do i = 1, count, 1
-        Sp_norm(i) = integral(i)/integral(1)
-        Fd_norm(i) = integral2(i)/integral2(1)
+        Sp_norm(i) = Total_Sp(i)/Total_Sp(1)
+        Fd_norm(i) = Total_Fd(i)/Total_Fd(1)
     enddo   
 
     OPEN(17,FILE="M0xCm.dat")
@@ -266,15 +266,15 @@
         Zgrid(i) = Zgrid(i)-Z_measur
     enddo   
     if (vartime.eq.1) then
-        call write_arr(Zgrid(:),integral(:),count,'Sp(z)_a=',8,int(a/3600/24))
-        call write_arr(Zgrid(:),integral2(:),count,'Fd(z)_a=',8,int(a/3600/24))
+        call write_arr(Zgrid(:),Total_Sp(:),count,'Sp(z)_a=',8,int(a/3600/24))
+        call write_arr(Zgrid(:),Total_Fd(:),count,'Fd(z)_a=',8,int(a/3600/24))
         call write_arr(Zgrid(:),gamma_interp(:),count,'gamma_a=',8,int(a/3600/24))
         call write_arr(Zgrid(:),Sp_norm(:),count,'Sp(z)_norm_a=',13,int(a/3600/24))
         call write_arr(Zgrid(:),Fd_norm(:),count,'Fd(z)_norm_a=',13,int(a/3600/24))
     else
         
-        call write_arr(Zgrid(:),integral(:),count,'Sp(z)_',6,0)
-        call write_arr(Zgrid(:),integral2(:),count,'Fd(z)_',6,0)
+        call write_arr(Zgrid(:),Total_Sp(:),count,'Sp(z)_',6,0)
+        call write_arr(Zgrid(:),Total_Fd(:),count,'Fd(z)_',6,0)
         call write_arr(Zgrid(:),gamma_interp(:),count,'gamma_',6,0)
         call write_arr(Zgrid(:),Sp_norm(:),count,'Sp(z)_norm_',11,0)
         call write_arr(Zgrid(:),Fd_norm(:),count,'Fd(z)_norm_',11,0)
@@ -285,6 +285,7 @@
     deallocate( dwp_interp, gamma_interp, d_interp)
     deallocate( O2_conc, T, d2Tdt)
     deallocate( d2O2dt)
+    deallocate(Total_Sp, Total_Fd)
     
 
 
