@@ -17,8 +17,8 @@ epsilon=4.2 	!power-law exponent for the size distribution
 dstart=0.00002 	!minimum diameter, m
 dend=0.002 	!maximum diameter, m
 Tref=4. 	!reference temperature, C
-Z_measur=96. 	!Sp measurments data to calculate M0*Cm (depth, m)
-Sp_measur=6.74433E-06 !Sp measurments data to calculate M0*Cm (Sp concentration, kg m^(−3))
+Z_measur=94. 	!Sp measurments data to calculate M0*Cm (depth, m)
+Sp_measur=5.59821E-06 !Sp measurments data to calculate M0*Cm (Sp concentration, kg m^(−3))
 Fd_measur=0.	!optionally we can use Fd measurments data to calculate M0*Cm. Then Sp_measur need to be set 0.
 
 $end
