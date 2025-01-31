@@ -17,7 +17,7 @@ If time-dependent degradation rate is considered, then alpha-value in days is ad
 for example, Fd(z)_30.dat, Sp(z)_30.dat, Fd(z)_norm_30.dat, Sp(z)_norm_30.dat, gamma_30.dat if alpha=30 days)
 
 How to use:
-Step 1: input the parameters into input-file. Follow the instructions to input the data correctly.
+Step 1: input the parameters into input-file. Follow the instructions to input the data correctly. In this release parameters and temperature and oxygen profiles are set as ones that were used in our simulations for the Atlantic Ocean.
 
 Step 2: If you want to model some specific ocean and change temperature and oxygen concentration profiles, replace the corresponding data-files "Temperature.dat" and "O2 concentration.dat" with new ones with the same names. You can found measurements data in https://github.com/KKovalets/EuLag_DataSet repository or in EuLag_DataSet release. Change the corresponding parameters n_data1 and n_data2 in the input-file. n_data1 is a number of lines in "Temperature.dat" and n_data2 is a number of lines in "O2 concentration.dat" file.
 
