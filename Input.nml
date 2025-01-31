@@ -9,10 +9,10 @@ a=2592000 	!empirical constant alpha (s) to calculate time-variable degradation 
 b=1. 		!empirical constant beta to calculate time-variable degradation rate
 Cr=3.4722222e-7 !1/s - constant for constant degradation rate
 Q10=2. 		!temperature coefficient, set 1. if degradation rate is temperature-independent
-Cw=2.5463 	!prefactor coefficient for the velocity, m^(1−η)/s
+Cw=2.5463 	!prefactor coefficient for the velocity, m^(1−η)/s; we can alternatively use value Cw=0.116 with corresponding change of eta=0.63
 K_O2=0.000256 	!oxygen dependence parameter kg*m^(−3), set 0. if degradation rate is oxygen-independent
 sigma=2.28 	!dimensionless scaling argument for mass
-eta=1.17 	!dimensionless scaling argument for velocity
+eta=1.17 	!dimensionless scaling argument for velocity; alternatively value eta=0.63 can be used with corresponding change of Cw=0.116
 epsilon=4.2 	!power-law exponent for the size distribution
 dstart=0.00002 	!minimum diameter, m
 dend=0.002 	!maximum diameter, m
