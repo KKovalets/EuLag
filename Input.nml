@@ -1,9 +1,9 @@
 $Inp1D
 H=5000.0 	!Depth, m
-n=4904 		!number of points over the depth (n=(H-Z_measur)/dz)
+n=4906 		!number of points over the depth (n=(H-Z_measur)/dz)
 ni=1000 	!number of points over diameter
-n_data1=96 	!number of experimental measurments (temperature)
-n_data2=96 	!number of experimental measurments (oxygen)
+n_data1=97 	!number of experimental measurments (temperature)
+n_data2=97 	!number of experimental measurments (oxygen)
 vartime=1 	!set 1 for time-variable degradation rate. Set 0 for constant
 a=2592000 	!empirical constant alpha (s) to calculate time-variable degradation rate
 b=1. 		!empirical constant beta to calculate time-variable degradation rate
