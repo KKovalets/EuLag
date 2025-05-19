@@ -24,7 +24,7 @@
     real (kind=4):: a, b, Tref, Q10, Cr, Cw, K_O2, sigma, eta, epsilon, M0, gamma0,  M0xCm 
     real(kind=8)::  wp2, dwp2,  H, dz, temp, dd0, Z_measur, Sp_measur, Fd_measur
     real (kind=8), allocatable:: O2_conc(:), T(:), d2Tdt(:), d2O2dt(:), d2wpdt(:), d3wpdt(:), d2gammadt(:), d2ddt(:), T_data(:), O2_data(:)
-    real (kind=8), allocatable:: gamma(:), d(:), Sp(:), Sp_norm(:), Fd_norm(:), wp(:), dwp(:), gamma_interp(:),  wp_interp(:), dwp_interp(:), d_interp(:), Total_Sp(:), Total_Fd(:)
+    real (kind=8), allocatable:: gamma_z(:), d(:), Sp(:), Sp_norm(:), Fd_norm(:), wp(:), dwp(:), gamma_interp(:),  wp_interp(:), dwp_interp(:), d_interp(:), Total_Sp(:), Total_Fd(:)
     real (kind = 8), allocatable:: d0(:), z(:),Zgrid(:), Z_data1(:), Z_data2(:)
     common /cm1/a, b,Cr, Tref, Q10, Cw, K_O2, sigma, eta, n_data1, n_data2, vartime
    
@@ -39,8 +39,8 @@
     time = 0.
     
     allocate(Zgrid(n+1), Sp(n+1), gamma_interp(n+1), wp_interp(n+1), dwp_interp(n+1), d_interp(n+1), Total_Sp(n+1), Total_Fd(n+1))
-    allocate( O2_conc(n+1), T(n+1), d2Tdt(n_data1), O2_data(n_data2), d2O2dt(n_data2), d2wpdt(n+1), d2ddt(n+1), d3wpdt(n+1), d2gammadt(n+1), T_data(n_data1))   
-    allocate(d(2*n), z(2*n), gamma(2*n),wp(2*n), dwp(2*n), Sp_norm(n+1), Fd_norm(n+1), Z_data1(n_data1), Z_data2(n_data2))
+    allocate( O2_conc(n+1), T(n+1), d2Tdt(n_data1), O2_data(n_data2), d2O2dt(n_data2), d2wpdt(2*n), d2ddt(2*n), d3wpdt(2*n), d2gammadt(2*n), T_data(n_data1))   
+    allocate(d(2*n), z(2*n), gamma_z(2*n),wp(2*n), dwp(2*n), Sp_norm(n+1), Fd_norm(n+1), Z_data1(n_data1), Z_data2(n_data2))
     dz = (H-Z_measur)/n
     dd0 = (dend-dstart)/ni
     
@@ -61,7 +61,7 @@
     z = 0.     !irregular z-coordinate z*, m
     wp = 0.    !particle settling velocity, wp, m/s
     Sp = 0.    !Particulate organic matter concentration of some size class i, Sp_i, kg/m^3
-    gamma = 0. !degradation rate gamma, 1/s
+    gamma_z = 0. !degradation rate gamma, 1/s
     !Normalized POM concentration Sp and flux Fd (kg/(m^2*s))
     Sp_norm = 0.
     Fd_norm = 0.
@@ -122,16 +122,16 @@
         wp(1) = Cw * d0(j)**eta
         Sp(1) = d0(j)**(sigma-epsilon)
         dt = dz/wp(1)
-        call gamma_func(time, T(1), O2_conc(1), gamma(1))
+        call gamma_func(time, T(1), O2_conc(1), gamma_z(1))
     i = 0
     do while ((z(i+1).le.H).and.(d(i+1).gt.dlim))
         i = i+1
        
         call splint(Z_data1, T_data, d2Tdt, n_data1,z(i), T1)
         call splint(Z_data2, O2_data, d2O2dt, n_data2, z(i), O1)
-        call gamma_func(time, T1, O1, gamma(i))
+        call gamma_func(time, T1, O1, gamma_z(i))
         
-        k1 = -gamma(i)*d(i)/sigma
+        k1 = -gamma_z(i)*d(i)/sigma
         m1 = Cw*d(i)**eta
         
         call splint(Z_data1, T_data, d2Tdt, n_data1, z(i)+dt*m1*0.5, T2)
@@ -168,23 +168,24 @@
     m = i
     dwp(1) =(wp(2)-wp(1))/dz
     time = 0 
-    
-    call spline(z, wp, m, null, null,d2wpdt)
-    call spline(z, dwp, m,null, null,d3wpdt)
-    call spline(z, gamma, m, null, null,d2gammadt)
-    call spline(z, d, m, null, null,d2ddt)
 
-        if (m.gt.n+1) then
+     if (m.gt.n+1) then
         count = n+1
     else
         count = m
     endif
+    
+    call spline(z, wp, m, null, null,d2wpdt)
+    call spline(z, dwp, m,null, null,d3wpdt)
+    call spline(z, gamma_z, m, null, null,d2gammadt)
+    call spline(z, d, m, null, null,d2ddt)
+    
     do i = 1, count, 1
     
         call splint(z, wp, d2wpdt, m, Zgrid(i), wp_interp(i))
         call splint(z, dwp, d3wpdt, m, Zgrid(i), dwp_interp(i))
         call splint(z, d, d2ddt, m, Zgrid(i), d_interp(i))
-        call splint(z, gamma, d2gammadt, m, Zgrid(i), gamma_interp(i))
+        call splint(z, gamma_z, d2gammadt, m, Zgrid(i), gamma_interp(i))
 
         if (Zgrid(i).gt.z(m)) then
             exit
@@ -206,21 +207,19 @@
             Total_Fd(1) = Total_Fd(1) + 2*Cw*d0(j)**(eta+sigma-epsilon)
         endif
     endif
-      
+    
         do i = 1, count-1, 1
         
             k1 = -(dwp_interp(i)+gamma_interp(i))*Sp(i)/wp_interp(i)
-            
             call splint(z, wp, d2wpdt, m, Zgrid(i) + dz/2, wp2)
             call splint(z, dwp, d3wpdt, m, Zgrid(i) + dz/2, dwp2)
-            call splint(Zgrid, gamma, d2gammadt, m, Zgrid(i) + dz/2, gamma1)
+            call splint(z, gamma_z, d2gammadt, m, Zgrid(i) + dz/2, gamma1)
            
             
             k2 = -(dwp2+gamma1)*(Sp(i) + dz*k1/2)/wp2
-            k3 = -(dwp2+gamma1)*(Sp(i) + dz*k2/2)/wp2 
-            
+            k3 = -(dwp2+gamma1)*(Sp(i) + dz*k2/2)/wp2
             k4 = -(dwp_interp(i+1)+gamma_interp(i+1))*(Sp(i) + dz*k3)/wp_interp(i+1)
-          
+           
             Sp(i+1)= Sp(i)+dz*(k1+2.*k2+2.*k3+k4)/6.
         
             if (j.eq.1.or.j.eq.ni+1) then
@@ -279,36 +278,44 @@
         call write_arr(Zgrid(:),Sp_norm(:),count,'Sp(z)_norm_',11,0)
         call write_arr(Zgrid(:),Fd_norm(:),count,'Fd(z)_norm_',11,0)
     endif
-              
-    
-    deallocate(gamma, Zgrid, Sp, d, z, wp, dwp, wp_interp)
-    deallocate( dwp_interp, gamma_interp, d_interp)
-    deallocate( O2_conc, T, d2Tdt)
-    deallocate( d2O2dt)
-    deallocate(Total_Sp, Total_Fd)
+
+    deallocate(Zgrid, Sp, gamma_interp, wp_interp, dwp_interp, d_interp, Total_Sp, Total_Fd)
+    deallocate( O2_conc)
+    deallocate(T)
+    deallocate(d2Tdt)
+    deallocate(O2_data) 
+    deallocate(d2O2dt)
+    deallocate(d2wpdt)
+    deallocate(d2ddt)
+    deallocate(d3wpdt)
+    deallocate(d2gammadt)
+    deallocate(T_data)   
+    deallocate(d)
+    deallocate(z, gamma_z,wp, dwp, Sp_norm, Fd_norm, Z_data1, Z_data2)    
+    deallocate(d0)
     
 
 
     end program EuLag
 
 
-    subroutine gamma_func(time, T, O2_conc, gamma)
-        real (kind = 8):: time, gamma, T, O2_conc
+    subroutine gamma_func(time, T, O2_conc, gamma_z)
+        real (kind = 8):: time, gamma_z, T, O2_conc
         real (kind = 4):: a, b, Cr, Tref, Q10, Cw, K_O2, sigma, eta
         integer n_data1,n_data2, vartime
         common /cm1/a, b, Cr, Tref, Q10, Cw, K_O2, sigma, eta, n_data1, n_data2, vartime
         
         if (vartime.eq.0) then
-            gamma = Cr
+            gamma_z = Cr
         else
-            gamma = b/(a + time)
+            gamma_z = b/(a + time)
         endif
         
-        gamma = gamma * (Q10**((T-Tref)/10.))
+        gamma_z = gamma_z * (Q10**((T-Tref)/10.))
         if ((O2_conc.eq.0.).or.(K_O2.eq.0.)) then
-            gamma = gamma
+            gamma_z = gamma_z
         else
-            gamma = gamma * O2_conc/(K_O2 + O2_conc)
+            gamma_z = gamma_z * O2_conc/(K_O2 + O2_conc)
         endif
 
     end subroutine
